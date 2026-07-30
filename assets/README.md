@@ -1,9 +1,8 @@
-# 🎵 Add your favorite song here
+# 🎵 Our song — "Until I Found You" (Stephen Sanchez)
 
-Drop an audio file named exactly **`our-song.mp3`** in this folder.
+The music button (top-right ♪) is set to our song.
 
-Then, on the website, click the round **♪** button in the top-right corner to play it.
+- If you add an audio file **you legally own** here named exactly **`our-song.mp3`**, it plays right on the page.
+- If there's no file, the button opens the **official song on YouTube** instead (no copyrighted file is stored in this project).
 
-- Format: `.mp3` works best across all browsers.
-- Keep it named `our-song.mp3` so the site finds it automatically.
-- Optional — the site works fine without it.
+Format tip: `.mp3` works best across all browsers. Keep the name `our-song.mp3`.

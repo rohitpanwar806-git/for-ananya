@@ -84,12 +84,16 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 // ---------- Music toggle ----------
+// Our song: "Until I Found You" by Stephen Sanchez.
+// We don't host the copyrighted track. If a legally-owned file exists at
+// assets/our-song.mp3 it plays inline; otherwise we open the official song on YouTube.
+const SONG_LINK = "https://www.youtube.com/results?search_query=Stephen+Sanchez+Until+I+Found+You+official";
 const song = el("song");
 const musicBtn = el("musicBtn");
 musicBtn.addEventListener("click", () => {
   if (song.paused) {
     song.play().then(() => musicBtn.classList.add("playing"))
-      .catch(() => alert("Add your favorite song as assets/our-song.mp3 to play it 🎵"));
+      .catch(() => window.open(SONG_LINK, "_blank", "noopener"));
   } else {
     song.pause();
     musicBtn.classList.remove("playing");
