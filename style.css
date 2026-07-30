@@ -313,8 +313,13 @@ section { padding: 5rem 1.2rem; max-width: 1080px; margin: 0 auto; }
 }
 .gb-note:nth-child(even) { transform: rotate(1.2deg); background: #fff4f8; }
 .gb-note::before { content: "📌"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); }
-.gb-note p { font-size: 0.94rem; margin-bottom: 0.5rem; word-break: break-word; }
+.gb-note p { font-size: 0.94rem; margin-bottom: 0.5rem; word-break: break-word; white-space: pre-wrap; }
 .gb-note .gb-who { font-family: "Dancing Script", cursive; font-size: 1.2rem; color: var(--pink); }
+.gb-note.just-pinned { animation: rise 0.5s ease both, pinGlow 1.6s ease 0.2s 2; }
+@keyframes pinGlow {
+  0%, 100% { box-shadow: var(--shadow); }
+  50% { box-shadow: 0 0 0 3px var(--pink), var(--shadow); }
+}
 .gb-empty { grid-column: 1 / -1; opacity: 0.6; }
 
 /* ---------- letter ---------- */

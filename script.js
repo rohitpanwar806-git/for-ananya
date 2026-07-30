@@ -245,6 +245,12 @@ el("complimentBtn").addEventListener("click", () => {
 const GB_KEY = "ananya-guestbook";
 const gbWall = el("gbWall");
 
+// Optional: get Ananya's notes emailed to Rohit.
+// This uses FormSubmit.co (free, no signup). The FIRST time a note is sent,
+// FormSubmit emails rohitpanwar806@gmail.com an activation link — click it once
+// to start receiving notes. Set to "" to keep notes device-only (no email).
+const GB_EMAIL_ENDPOINT = "https://formsubmit.co/ajax/rohitpanwar806@gmail.com";
+
 function loadNotes() {
   try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; }
   catch { return []; }
@@ -282,6 +288,24 @@ el("gbForm").addEventListener("submit", (e) => {
   el("gbName").value = "";
   el("gbMsg").value = "";
   renderNotes();
+  // Bring the freshly pinned note into view so Ananya sees it land 💌
+  const pinned = gbWall.querySelector(".gb-note");
+  if (pinned) {
+    pinned.classList.add("just-pinned");
+    pinned.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  // Optionally email the note to Rohit (only if an endpoint is configured).
+  if (GB_EMAIL_ENDPOINT) {
+    fetch(GB_EMAIL_ENDPOINT, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name || "Ananya",
+        message: msg,
+        _subject: "🌸 New note from Ananya",
+      }),
+    }).catch(() => { /* stay silent — the note is already pinned locally */ });
+  }
   for (let k = 0; k < 5; k++) setTimeout(spawn, k * 100);
 });
 renderNotes();
