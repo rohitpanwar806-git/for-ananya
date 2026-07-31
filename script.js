@@ -262,19 +262,9 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
-// --- Firebase (Google Cloud) ---
-let notesCol = null;
-(function initFirebase() {
-  const cfg = window.FIREBASE_CONFIG;
-  if (!cfg || !window.firebase || String(cfg.apiKey || "").startsWith("PASTE")) return;
-  try {
-    firebase.initializeApp(cfg);
-    notesCol = firebase.firestore().collection("notes");
-  } catch (err) {
-    notesCol = null;
-  }
-})();
-const cloudReady = () => !!notesCol;
+// --- Cloud notes (Firebase Firestore; initialized by the module in index.html) ---
+let cloud = null;
+let cloudUnsub = null;
 
 // --- Rendering (shared by cloud + local) ---
 function renderList(items, animateFirst) {
@@ -308,20 +298,24 @@ function renderLocalNotes() {
 }
 
 // --- Wire up the wall ---
-if (cloudReady()) {
-  notesCol.orderBy("createdAt", "desc").onSnapshot(
-    (snap) => {
-      const items = [];
-      snap.forEach((doc) => items.push(doc.data()));
-      renderList(items, true);
-    },
+function activateCloud() {
+  if (!window.AnanyaNotes) return;
+  cloud = window.AnanyaNotes;
+  if (cloudUnsub) cloudUnsub();
+  cloudUnsub = cloud.subscribe(
+    (items) => renderList(items, true),
     () => {
       setStatus("Couldn't reach the shared wall — showing this device only.", "err");
       renderLocalNotes();
     }
   );
+}
+
+if (window.AnanyaNotes) {
+  activateCloud();
 } else {
   renderLocalNotes();
+  window.addEventListener("ananya-notes-ready", activateCloud, { once: true });
 }
 
 el("gbForm").addEventListener("submit", (e) => {
@@ -332,15 +326,10 @@ el("gbForm").addEventListener("submit", (e) => {
   el("gbName").value = "";
   el("gbMsg").value = "";
 
-  if (cloudReady()) {
+  if (cloud) {
     setStatus("Saving your note for Rohit… 💌", "");
-    notesCol
-      .add({
-        name: name || "Ananya",
-        msg,
-        createdAt: Date.now(),
-        at: firebase.firestore.FieldValue.serverTimestamp(),
-      })
+    cloud
+      .add({ name, msg })
       .then(() => setStatus("Saved 💛 Rohit will see this.", "ok"))
       .catch(() => {
         setStatus("Couldn't save online — kept a copy on this device.", "err");

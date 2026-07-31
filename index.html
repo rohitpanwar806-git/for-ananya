@@ -244,9 +244,38 @@
   </footer>
 
   <!-- Firebase (Google Cloud) — stores Ananya's notes so Rohit can see them all -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const cfg = window.FIREBASE_CONFIG;
+    if (cfg && !String(cfg.apiKey || "").startsWith("PASTE")) {
+      try {
+        const app = initializeApp(cfg);
+        const db = getFirestore(app, window.FIREBASE_DB_ID || "(default)");
+        const col = collection(db, "notes");
+        window.AnanyaNotes = {
+          add: (note) => addDoc(col, {
+            name: note.name || "Ananya",
+            msg: note.msg,
+            createdAt: Date.now(),
+            at: serverTimestamp(),
+          }),
+          subscribe: (onData, onErr) => onSnapshot(
+            query(col, orderBy("createdAt", "desc")),
+            (snap) => { const items = []; snap.forEach((d) => items.push(d.data())); onData(items); },
+            onErr
+          ),
+        };
+        window.dispatchEvent(new Event("ananya-notes-ready"));
+      } catch (e) {
+        /* config not valid yet — the page stays on this-device-only storage */
+      }
+    }
+  </script>
 </body>
 </html>
