@@ -266,14 +266,32 @@ function escapeHtml(str) {
 let cloud = null;
 let cloudUnsub = null;
 
+// Featured notes that are always shown at the top of the wall (kept in the code
+// so they never disappear, no matter the device or database).
+const FEATURED_NOTES = [
+  {
+    name: "Ananya",
+    msg:
+      "Hey Moon Well, I've met a lot of people in my life, been through multiple " +
+      "relationships and so have you and randomly i found you..you were drunk and " +
+      "bold and totally had a lot of guts to totally pull out our conversation to " +
+      "marriage. And I was completely shocked and attracted towards your drunk " +
+      "confidence. But yeah as you may have realised there are parts of you and me " +
+      "we need to see accept and heal and maybe I would like to do that with you " +
+      "with absolutely no conditions just real you with real me and just one thing " +
+      "I wanna add you're too cute.",
+  },
+];
+
 // --- Rendering (shared by cloud + local) ---
 function renderList(items, animateFirst) {
+  const all = FEATURED_NOTES.concat(items || []);
   gbWall.innerHTML = "";
-  if (!items.length) {
+  if (!all.length) {
     gbWall.innerHTML = '<p class="gb-empty">No notes yet — be the first to pin one! 💌</p>';
     return;
   }
-  items.forEach((n) => {
+  all.forEach((n) => {
     const div = document.createElement("div");
     div.className = "gb-note";
     div.innerHTML = `<p>${escapeHtml(n.msg)}</p><span class="gb-who">— ${escapeHtml(n.name || "Someone")}</span>`;
