@@ -16,6 +16,7 @@ A romantic single-page gift website ("For Ananya"). See [README.md](README.md) f
 - **Tone:** all user-facing copy is warm, playful, and romantic. Match it. Emoji are intentional and expected.
 - **Accessibility & motion:** keep `aria-label`s on interactive controls, and respect `prefers-reduced-motion` (falling petals are gated on it) when adding animations.
 - **Persistence:** the guestbook stores notes in **Firebase Firestore** (Google Cloud) when [firebase-config.js](firebase-config.js) is filled in — giving a live shared wall + a console Rohit can read. It **falls back to `localStorage`** (device-only) when Firebase isn't configured. The login gate uses `sessionStorage`. Firebase is loaded via CDN `<script>` tags in [index.html](index.html); there is still no build step.
+- **Firebase integration contract:** load order in [index.html](index.html) is `firebase-config.js` → `script.js` → the inline `<script type="module">`. The module reads `window.FIREBASE_CONFIG`, and when the config is valid it publishes `window.AnanyaNotes` (with `add()` + `subscribe()`) and fires the `ananya-notes-ready` event. [script.js](script.js) listens for that event to switch from local to cloud storage. Preserve this global + event handshake — `script.js` must never `import` Firebase directly. The `FEATURED_NOTES` array in [script.js](script.js) is always rendered at the top of the wall regardless of storage backend.
 
 ## Guardrails
 
