@@ -244,36 +244,38 @@ el("complimentBtn").addEventListener("click", () => {
 // ---------- Guestbook (saved in the browser) ----------
 const GB_KEY = "ananya-guestbook";
 const gbWall = el("gbWall");
+const gbStatus = el("gbStatus");
 
-// Optional: get Ananya's notes emailed to Rohit.
-// Uses FormSubmit.co (free, no signup) via a real form POST into a hidden iframe
-// (a plain fetch is blocked by FormSubmit's Cloudflare check). The FIRST time a
-// note is sent, FormSubmit emails rohitpanwar806@gmail.com an activation link —
-// click it once to start receiving notes. Set to "" to keep notes device-only.
-const GB_EMAIL_ENDPOINT = "https://formsubmit.co/rohitpanwar806@gmail.com";
+// Deliver Ananya's notes to Rohit via Formspree (free, reliable from a static site).
+// SETUP (one time):
+//   1. Sign up at https://formspree.io with rohitpanwar806@gmail.com
+//   2. Create a new form — copy its endpoint, e.g. "https://formspree.io/f/abcdwxyz"
+//   3. Paste that endpoint below (replace YOUR_FORM_ID).
+//   4. Send one test note, then click the confirmation email Formspree sends you.
+// After that, every note is emailed to you AND saved in your Formspree dashboard.
+// Leave it as-is (with YOUR_FORM_ID) to keep notes device-only until you set it up.
+const GB_EMAIL_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+
+function setStatus(msg, kind) {
+  if (!gbStatus) return;
+  gbStatus.textContent = msg;
+  gbStatus.className = "gb-status" + (kind ? " " + kind : "");
+}
 
 function emailNote(name, msg) {
-  if (!GB_EMAIL_ENDPOINT) return;
-  const form = document.createElement("form");
-  form.action = GB_EMAIL_ENDPOINT;
-  form.method = "POST";
-  form.target = "gbSink"; // submit into the hidden iframe, no page navigation
-  form.style.display = "none";
-  const field = (name, value) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  };
-  field("name", name || "Ananya");
-  field("message", msg);
-  field("_subject", "🌸 New note from Ananya");
-  field("_template", "table");
-  field("_captcha", "false");
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(() => form.remove(), 4000);
+  // Not configured yet — notes still pin locally on this device.
+  if (!GB_EMAIL_ENDPOINT || GB_EMAIL_ENDPOINT.includes("YOUR_FORM_ID")) return;
+  setStatus("Sending your note to Rohit… 💌", "");
+  fetch(GB_EMAIL_ENDPOINT, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name || "Ananya", message: msg }),
+  })
+    .then((res) => {
+      if (res.ok) setStatus("Sent to Rohit — and pinned here too! 💛", "ok");
+      else setStatus("Pinned here, but the note couldn't reach Rohit this time.", "err");
+    })
+    .catch(() => setStatus("Pinned here — you may be offline, so Rohit's copy didn't send.", "err"));
 }
 
 function loadNotes() {

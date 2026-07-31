@@ -206,8 +206,7 @@
       <textarea id="gbMsg" maxlength="9000" placeholder="Type your message here…" rows="4" required></textarea>
       <button type="submit" class="gb-send">Pin my note 📌</button>
     </form>
-    <!-- Hidden target so notes email without navigating away from the page -->
-    <iframe name="gbSink" title="note delivery" aria-hidden="true" tabindex="-1" style="display:none"></iframe>
+    <p class="gb-status" id="gbStatus" role="status" aria-live="polite"></p>
     <div class="gb-wall" id="gbWall"></div>
   </section>
 

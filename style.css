@@ -321,6 +321,9 @@ section { padding: 5rem 1.2rem; max-width: 1080px; margin: 0 auto; }
   50% { box-shadow: 0 0 0 3px var(--pink), var(--shadow); }
 }
 .gb-empty { grid-column: 1 / -1; opacity: 0.6; }
+.gb-status { max-width: 720px; margin: 0.2rem auto 1rem; min-height: 1.2em; font-size: 0.9rem; text-align: center; transition: color 0.2s; }
+.gb-status.ok { color: var(--pink); font-weight: 600; }
+.gb-status.err { color: var(--deep); opacity: 0.85; }
 
 /* ---------- letter ---------- */
 .letter { text-align: center; }
