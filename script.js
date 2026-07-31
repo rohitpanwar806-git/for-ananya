@@ -246,10 +246,35 @@ const GB_KEY = "ananya-guestbook";
 const gbWall = el("gbWall");
 
 // Optional: get Ananya's notes emailed to Rohit.
-// This uses FormSubmit.co (free, no signup). The FIRST time a note is sent,
-// FormSubmit emails rohitpanwar806@gmail.com an activation link — click it once
-// to start receiving notes. Set to "" to keep notes device-only (no email).
-const GB_EMAIL_ENDPOINT = "https://formsubmit.co/ajax/rohitpanwar806@gmail.com";
+// Uses FormSubmit.co (free, no signup) via a real form POST into a hidden iframe
+// (a plain fetch is blocked by FormSubmit's Cloudflare check). The FIRST time a
+// note is sent, FormSubmit emails rohitpanwar806@gmail.com an activation link —
+// click it once to start receiving notes. Set to "" to keep notes device-only.
+const GB_EMAIL_ENDPOINT = "https://formsubmit.co/rohitpanwar806@gmail.com";
+
+function emailNote(name, msg) {
+  if (!GB_EMAIL_ENDPOINT) return;
+  const form = document.createElement("form");
+  form.action = GB_EMAIL_ENDPOINT;
+  form.method = "POST";
+  form.target = "gbSink"; // submit into the hidden iframe, no page navigation
+  form.style.display = "none";
+  const field = (name, value) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  };
+  field("name", name || "Ananya");
+  field("message", msg);
+  field("_subject", "🌸 New note from Ananya");
+  field("_template", "table");
+  field("_captcha", "false");
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => form.remove(), 4000);
+}
 
 function loadNotes() {
   try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; }
@@ -295,17 +320,7 @@ el("gbForm").addEventListener("submit", (e) => {
     pinned.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   // Optionally email the note to Rohit (only if an endpoint is configured).
-  if (GB_EMAIL_ENDPOINT) {
-    fetch(GB_EMAIL_ENDPOINT, {
-      method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name || "Ananya",
-        message: msg,
-        _subject: "🌸 New note from Ananya",
-      }),
-    }).catch(() => { /* stay silent — the note is already pinned locally */ });
-  }
+  emailNote(name, msg);
   for (let k = 0; k < 5; k++) setTimeout(spawn, k * 100);
 });
 renderNotes();
