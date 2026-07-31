@@ -15,7 +15,7 @@ A romantic single-page gift website ("For Ananya"). See [README.md](README.md) f
 - **CSS:** use the color/shadow CSS variables in `:root` (`--pink`, `--rose`, `--cream`, `--ink`, `--gold`, `--shadow`, etc.) instead of hard-coded values. Fonts: Playfair Display / Dancing Script (headings), Poppins (body), loaded from Google Fonts.
 - **Tone:** all user-facing copy is warm, playful, and romantic. Match it. Emoji are intentional and expected.
 - **Accessibility & motion:** keep `aria-label`s on interactive controls, and respect `prefers-reduced-motion` (falling petals are gated on it) when adding animations.
-- **Persistence:** browser-only — `sessionStorage` for the login gate, `localStorage` for the guestbook. No backend exists.
+- **Persistence:** the guestbook stores notes in **Firebase Firestore** (Google Cloud) when [firebase-config.js](firebase-config.js) is filled in — giving a live shared wall + a console Rohit can read. It **falls back to `localStorage`** (device-only) when Firebase isn't configured. The login gate uses `sessionStorage`. Firebase is loaded via CDN `<script>` tags in [index.html](index.html); there is still no build step.
 
 ## Guardrails
 

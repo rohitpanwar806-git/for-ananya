@@ -207,8 +207,6 @@
       <button type="submit" class="gb-send">Pin my note 📌</button>
     </form>
     <p class="gb-status" id="gbStatus" role="status" aria-live="polite"></p>
-    <!-- Hidden target so notes email to Rohit without navigating away from the page -->
-    <iframe name="gbSink" id="gbSink" title="note delivery" aria-hidden="true" tabindex="-1" style="display:none"></iframe>
     <div class="gb-wall" id="gbWall"></div>
   </section>
 
@@ -245,6 +243,10 @@
     <a href="#top" class="back-top">Back to the beginning ↑</a>
   </footer>
 
+  <!-- Firebase (Google Cloud) — stores Ananya's notes so Rohit can see them all -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

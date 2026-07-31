@@ -241,19 +241,14 @@ el("complimentBtn").addEventListener("click", () => {
   for (let k = 0; k < 4; k++) setTimeout(spawn, k * 120);
 });
 
-// ---------- Guestbook (saved in the browser) ----------
+// ---------- Guestbook ----------
+// Ananya's notes are stored in Firebase Firestore (Rohit's Google Cloud project),
+// so they're saved online, visible in the Firebase console, and shown live on a
+// shared wall for both of them. If Firebase isn't configured yet, notes fall back
+// to this-device-only storage so the site still works.
 const GB_KEY = "ananya-guestbook";
 const gbWall = el("gbWall");
 const gbStatus = el("gbStatus");
-
-// Deliver Ananya's notes to Rohit by email via FormSubmit.co (free, NO signup).
-// A real form submission into a hidden iframe is used because FormSubmit blocks
-// plain background fetches behind a Cloudflare check.
-// ONE-TIME STEP: the very first time a note is sent, FormSubmit emails
-// rohitpanwar806@gmail.com a "Confirm your email" / "Activate Form" link.
-// Rohit must click it once (check Spam/Promotions). After that, every note
-// Ananya pins is emailed to Rohit automatically. Set to "" to disable email.
-const GB_EMAIL_ENDPOINT = "https://formsubmit.co/rohitpanwar806@gmail.com";
 
 function setStatus(msg, kind) {
   if (!gbStatus) return;
@@ -261,35 +256,46 @@ function setStatus(msg, kind) {
   gbStatus.className = "gb-status" + (kind ? " " + kind : "");
 }
 
-function emailNote(name, msg) {
-  if (!GB_EMAIL_ENDPOINT) return;
-  setStatus("Sending your note to Rohit… 💌", "");
-  const sink = el("gbSink");
-  if (sink) {
-    sink.onload = () => setStatus("Saved here and sent to Rohit 💛", "ok");
-  }
-  const form = document.createElement("form");
-  form.action = GB_EMAIL_ENDPOINT;
-  form.method = "POST";
-  form.target = "gbSink"; // submit into the hidden iframe, no page navigation
-  form.style.display = "none";
-  const field = (fieldName, value) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = fieldName;
-    input.value = value;
-    form.appendChild(input);
-  };
-  field("name", name || "Ananya");
-  field("message", msg);
-  field("_subject", "🌸 New note from Ananya");
-  field("_template", "table");
-  field("_captcha", "false");
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(() => form.remove(), 4000);
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
 }
 
+// --- Firebase (Google Cloud) ---
+let notesCol = null;
+(function initFirebase() {
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg || !window.firebase || String(cfg.apiKey || "").startsWith("PASTE")) return;
+  try {
+    firebase.initializeApp(cfg);
+    notesCol = firebase.firestore().collection("notes");
+  } catch (err) {
+    notesCol = null;
+  }
+})();
+const cloudReady = () => !!notesCol;
+
+// --- Rendering (shared by cloud + local) ---
+function renderList(items, animateFirst) {
+  gbWall.innerHTML = "";
+  if (!items.length) {
+    gbWall.innerHTML = '<p class="gb-empty">No notes yet — be the first to pin one! 💌</p>';
+    return;
+  }
+  items.forEach((n) => {
+    const div = document.createElement("div");
+    div.className = "gb-note";
+    div.innerHTML = `<p>${escapeHtml(n.msg)}</p><span class="gb-who">— ${escapeHtml(n.name || "Someone")}</span>`;
+    gbWall.appendChild(div);
+  });
+  if (animateFirst) {
+    const first = gbWall.querySelector(".gb-note");
+    if (first) first.classList.add("just-pinned");
+  }
+}
+
+// --- Local fallback storage ---
 function loadNotes() {
   try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; }
   catch { return []; }
@@ -297,47 +303,65 @@ function loadNotes() {
 function saveNotes(notes) {
   try { localStorage.setItem(GB_KEY, JSON.stringify(notes)); } catch { /* ignore */ }
 }
-function escapeHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
+function renderLocalNotes() {
+  renderList(loadNotes().slice().reverse(), false);
 }
-function renderNotes() {
-  const notes = loadNotes();
-  gbWall.innerHTML = "";
-  if (!notes.length) {
-    gbWall.innerHTML = '<p class="gb-empty">No notes yet — be the first to pin one! 💌</p>';
-    return;
-  }
-  notes.slice().reverse().forEach((n) => {
-    const div = document.createElement("div");
-    div.className = "gb-note";
-    div.innerHTML = `<p>${escapeHtml(n.msg)}</p><span class="gb-who">— ${escapeHtml(n.name || "Someone")}</span>`;
-    gbWall.appendChild(div);
-  });
+
+// --- Wire up the wall ---
+if (cloudReady()) {
+  notesCol.orderBy("createdAt", "desc").onSnapshot(
+    (snap) => {
+      const items = [];
+      snap.forEach((doc) => items.push(doc.data()));
+      renderList(items, true);
+    },
+    () => {
+      setStatus("Couldn't reach the shared wall — showing this device only.", "err");
+      renderLocalNotes();
+    }
+  );
+} else {
+  renderLocalNotes();
 }
+
 el("gbForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const name = el("gbName").value.trim();
   const msg = el("gbMsg").value.trim();
   if (!msg) return;
-  const notes = loadNotes();
-  notes.push({ name, msg, at: Date.now() });
-  saveNotes(notes);
   el("gbName").value = "";
   el("gbMsg").value = "";
-  renderNotes();
-  // Bring the freshly pinned note into view so Ananya sees it land 💌
-  const pinned = gbWall.querySelector(".gb-note");
-  if (pinned) {
-    pinned.classList.add("just-pinned");
-    pinned.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  if (cloudReady()) {
+    setStatus("Saving your note for Rohit… 💌", "");
+    notesCol
+      .add({
+        name: name || "Ananya",
+        msg,
+        createdAt: Date.now(),
+        at: firebase.firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => setStatus("Saved 💛 Rohit will see this.", "ok"))
+      .catch(() => {
+        setStatus("Couldn't save online — kept a copy on this device.", "err");
+        const notes = loadNotes();
+        notes.push({ name, msg, at: Date.now() });
+        saveNotes(notes);
+        renderLocalNotes();
+      });
+  } else {
+    const notes = loadNotes();
+    notes.push({ name, msg, at: Date.now() });
+    saveNotes(notes);
+    renderLocalNotes();
+    const pinned = gbWall.querySelector(".gb-note");
+    if (pinned) {
+      pinned.classList.add("just-pinned");
+      pinned.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }
-  // Optionally email the note to Rohit (only if an endpoint is configured).
-  emailNote(name, msg);
   for (let k = 0; k < 5; k++) setTimeout(spawn, k * 100);
 });
-renderNotes();
 
 // ---------- Reveal on scroll ----------
 const io = new IntersectionObserver(
