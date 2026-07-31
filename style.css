@@ -170,7 +170,7 @@ section { padding: 5rem 1.2rem; max-width: 1080px; margin: 0 auto; }
 .photo:hover img { transform: scale(1.06); }
 /* Keep the face in frame for a photo whose subject sits near the top.
    Nudge the % values if the face is still off (e.g. 50% 20% shows a bit lower). */
-.photo img.focus-face { object-position: 50% 15%; }
+.photo img.focus-face { object-position: 50% 0%; }
 /* placeholder shown when photo file is missing */
 .photo img.missing { opacity: 0; }
 .photo img.missing + figcaption { opacity: 1; }
