@@ -34,12 +34,13 @@
 // ============================================================
 
 window.FIREBASE_CONFIG = {
-  apiKey: "PASTE_API_KEY",
+  apiKey: "AIzaSyCi35kOjzaL-HriTiSJjVFy01wzYE7QAV0",
   authDomain: "radiant-wall-504100-j2.firebaseapp.com",
   projectId: "radiant-wall-504100-j2",
-  storageBucket: "radiant-wall-504100-j2.appspot.com",
+  storageBucket: "radiant-wall-504100-j2.firebasestorage.app",
   messagingSenderId: "513762820141",
-  appId: "PASTE_APP_ID",
+  appId: "1:513762820141:web:3cb8f87120c878507c38a4",
+  measurementId: "G-G4G8V9VDR3",
 };
 
 // Name of the Firestore database you created (not the usual "(default)").
