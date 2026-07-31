@@ -207,6 +207,8 @@
       <button type="submit" class="gb-send">Pin my note 📌</button>
     </form>
     <p class="gb-status" id="gbStatus" role="status" aria-live="polite"></p>
+    <!-- Hidden target so notes email to Rohit without navigating away from the page -->
+    <iframe name="gbSink" id="gbSink" title="note delivery" aria-hidden="true" tabindex="-1" style="display:none"></iframe>
     <div class="gb-wall" id="gbWall"></div>
   </section>
 
